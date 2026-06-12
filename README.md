@@ -1,11 +1,13 @@
 # MyEduConnect Environment Setup Guide
 
-This guide outlines the steps to set up the infrastructure required for the MyEduConnect platform, including the Apache web server, MySQL database, and Python environment.
+This guide outlines the steps to set up the infrastructure required for the MyEduConnect platform, including the Apache web server, the database, and the Python environment.
+
+Because you may develop on Windows and deploy/test on Linux, two separate installation paths are provided below.
 
 ---
 
 ## 1. Local Windows Development Setup
-If you are testing the application locally on your Windows machine, using a bundled software stack like XAMPP is the easiest method.
+*Use this environment for your main coding and editing workflow.*
 
 ### 1.1. Download and Install XAMPP
 1. Download XAMPP from [apachefriends.org](https://www.apachefriends.org/).
@@ -13,7 +15,7 @@ If you are testing the application locally on your Windows machine, using a bund
 3. Open the **XAMPP Control Panel**.
 4. Click **Start** next to both Apache and MySQL.
 
-### 1.2. Configure Apache as a Reverse Proxy (Windows)
+### 1.2. Configure Apache as a Reverse Proxy
 To allow Apache to route traffic to your Flask app, you must enable proxy modules.
 1. In the XAMPP Control Panel, click **Config** next to Apache and select **httpd.conf**.
 2. Find and uncomment (remove the `#`) from the following lines:
@@ -21,72 +23,92 @@ To allow Apache to route traffic to your Flask app, you must enable proxy module
    LoadModule proxy_module modules/mod_proxy.so
    LoadModule proxy_http_module modules/mod_proxy_http.so
    ```
-3. Add the configuration block from `secure_apache_example.conf` to the bottom of the file (making sure to adjust the `DocumentRoot` path to where your project is stored).
-4. Restart Apache from the XAMPP control panel.
+3. Scroll to the very bottom of the file and add the reverse proxy configuration:
+   ```apache
+   ProxyPass / http://127.0.0.1:5000/
+   ProxyPassReverse / http://127.0.0.1:5000/
+   ```
+4. Click **Stop** and then **Start** on Apache in the XAMPP control panel to restart it.
+
+### 1.3. Database Initialization
+1. Open your command line / terminal and navigate to your project directory.
+2. Log into MySQL as the root user (XAMPP usually has no password by default):
+   ```bash
+   mysql -u root
+   ```
+   *(If `mysql` is not recognized, click the "Shell" button in the XAMPP control panel and type it there).*
+3. Load the database schema:
+   ```sql
+   source database/schema.sql;
+   exit;
+   ```
+
+### 1.4. Running the Flask Application
+1. Open a terminal in your project directory.
+2. Install the required Python packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Start the application:
+   ```bash
+   python app.py
+   ```
+4. Access the application by navigating to `http://127.0.0.1:5000` or `http://localhost`.
 
 ---
 
-## 2. VMware Linux OS Deployment
-When you deploy the application to your VMware Linux guest OS, you should install the native packages via the command line.
+## 2. Linux OS Deployment (Kali / Debian / Ubuntu)
+*Use this environment when deploying or testing inside your VMware Linux guest OS.*
 
-### 2.1. Install Requirements (Ubuntu/Debian)
-Open your terminal and run the following commands:
+### 2.1. Get the Source Code
+Open your terminal and download your project from GitHub:
 ```bash
-# Update package lists
-sudo apt update
-
-# Install Apache Web Server
-sudo apt install apache2
-
-# Install MySQL Server
-sudo apt install mysql-server
-
-# Install Python 3 and pip
-sudo apt install python3 python3-pip
+git clone https://github.com/vuckoooo/MyEduConnect_Website_TT4L_Group2.git
+cd MyEduConnect_Website_TT4L_Group2
 ```
 
-### 2.2. Configure Apache as a Reverse Proxy (Linux)
+### 2.2. Install Requirements
+Install the Apache web server, MariaDB (the drop-in replacement for MySQL), and Python tools:
+```bash
+sudo apt update
+sudo apt install apache2 mariadb-server python3 python3-pip git
+```
+
+### 2.3. Configure Apache as a Reverse Proxy
 Enable the necessary proxy modules so Apache can forward traffic to Flask:
 ```bash
 sudo a2enmod proxy
 sudo a2enmod proxy_http
-sudo systemctl restart apache2
 ```
-*Note: You will place the contents of `secure_apache_example.conf` inside `/etc/apache2/sites-available/000-default.conf`.*
-
----
-
-## 3. Database Initialization (Both OS)
-
-Once MySQL is running (either via XAMPP or Linux):
-1. Open your command line / terminal.
-2. Log into MySQL as the root user:
+Next, configure your virtual host:
+1. Open the default Apache configuration file:
    ```bash
-   mysql -u root -p
+   sudo nano /etc/apache2/sites-available/000-default.conf
    ```
-   *(If you are using XAMPP locally, there might be no password by default, so just `mysql -u root` will work).*
-3. Load the database schema:
+2. Paste the following proxy settings right before the `</VirtualHost>` tag at the very bottom:
+   ```apache
+   ProxyPass / http://127.0.0.1:5000/
+   ProxyPassReverse / http://127.0.0.1:5000/
+   ```
+3. Save, exit (`Ctrl+O`, `Enter`, `Ctrl+X`), and restart Apache:
    ```bash
-   source /path/to/your/project/database/schema.sql;
+   sudo systemctl restart apache2
    ```
-   *Alternatively, if you are outside the MySQL prompt, you can run:*
-   `mysql -u root < database/schema.sql`
 
----
+### 2.4. Database Initialization
+Start the MariaDB service and import your database schema directly:
+```bash
+sudo systemctl start mariadb
+sudo mysql -u root < database/schema.sql
+```
 
-## 4. Running the Flask Application
-
-1. Open a terminal in the `Website` directory.
-2. Install the required Python packages (only needs to be done once):
+### 2.5. Running the Flask Application
+1. Install the required Python packages (use the break-system-packages flag for Kali/Debian's strict environments):
    ```bash
-   pip install -r requirements.txt
+   pip install -r requirements.txt --break-system-packages
    ```
-3. Check the `app.py` file. If your MySQL root user has a password, update line 15:
-   ```python
-   app.config['MYSQL_PASSWORD'] = 'your_password_here'
-   ```
-4. Start the application:
+2. Start the application:
    ```bash
-   python app.py
+   python3 app.py
    ```
-5. You can now access the application by navigating to `http://127.0.0.1:5000` or via your Apache server URL.
+3. Access the application by navigating to `http://127.0.0.1:5000` or your Linux machine's IP address.
