@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <h2 class="text-center">Search Courses</h2>
+    
+    <div style="max-width: 600px; margin: 0 auto 2rem;">
+        <div class="form-group" style="display: flex; gap: 1rem;">
+            <input type="text" id="searchInput" placeholder="Search for courses..." style="flex: 1;">
+            <button onclick="performSearch()" class="btn">Search</button>
+        </div>
+    </div>
+    
+    <div id="resultsContainer" style="display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
+        <!-- Results will be injected here -->
+    </div>
+</div>
+
+<script>
+async function performSearch() {
+    const query = document.getElementById('searchInput').value;
+    const container = document.getElementById('resultsContainer');
+    
+    try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const result = await response.json();
+        
+        container.innerHTML = ''; // Clear previous
+        
+        if (result.status === 'success') {
+            if (result.data.length === 0) {
+                container.innerHTML = '<p class="text-center" style="grid-column: 1/-1;">No courses found.</p>';
+                return;
+            }
+            
+            result.data.forEach(course => {
+                const card = document.createElement('div');
+                card.style.background = 'rgba(15, 23, 42, 0.6)';
+                card.style.padding = '1.5rem';
+                card.style.borderRadius = '8px';
+                card.style.border = '1px solid var(--border-color)';
+                
+                card.innerHTML = `
+                    <h3 style="color: var(--accent); margin-bottom: 0.5rem; font-size: 1.2rem;">
+                        ${escapeHtml(course.title)}
+                    </h3>
+                    <p style="font-size: 0.95rem; margin-bottom: 0;">
+                        ${escapeHtml(course.description || '')}
+                    </p>
+                `;
+                container.appendChild(card);
+            });
+        } else {
+            container.innerHTML = `<div class="alert alert-danger" style="grid-column: 1/-1;">${escapeHtml(result.message)}</div>`;
+        }
+    } catch (e) {
+        container.innerHTML = '<div class="alert alert-danger" style="grid-column: 1/-1;">An error occurred while fetching courses.</div>';
+    }
+}
+
+// Utility to escape HTML in JS output (client-side XSS protection)
+function escapeHtml(unsafe) {
+    return (unsafe || '').toString()
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+</script>
+{% endblock %}

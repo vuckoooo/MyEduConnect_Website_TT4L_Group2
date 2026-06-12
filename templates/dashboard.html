@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <h2>Student Dashboard</h2>
+    <p>Welcome back, <strong>{{ session['username'] }}</strong>!</p>
+    
+    <div style="margin-top: 2rem;">
+        <h3>Your Profile / Bio</h3>
+        
+        <!-- REMEDIATION: The bio is safely rendered (auto-escaped) by Jinja2 by default. 
+             If this contained XSS payload, it would be safely shown as text -->
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+            {% if bio %}
+                {{ bio }}
+            {% else %}
+                <em style="color: var(--text-muted);">No bio provided yet. Add one below!</em>
+            {% endif %}
+        </div>
+        
+        <h3>Update Profile</h3>
+        <form method="POST">
+            <div class="form-group">
+                <label for="bio">Tell us about yourself:</label>
+                <textarea id="bio" name="bio" rows="5" placeholder="Enter your bio here...">{{ bio }}</textarea>
+            </div>
+            <button type="submit" class="btn">Save Profile</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

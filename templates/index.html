@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card text-center" style="padding: 5rem 2rem; margin-top: 2rem;">
+    <h1 style="font-size: 3rem; margin-bottom: 1.5rem;">Empower Your Future<br>With Secure Learning</h1>
+    <p style="font-size: 1.2rem; max-width: 600px; margin: 0 auto 2rem;">
+        Join thousands of students on a platform built with modern security standards. Master new skills without compromising your data.
+    </p>
+    <div>
+        <a href="{{ url_for('frontend_bp.register') }}" class="btn" style="padding: 1rem 2rem; font-size: 1.1rem; margin-right: 1rem;">Get Started</a>
+        <a href="{{ url_for('frontend_bp.search') }}" class="btn" style="background: transparent; border: 1px solid var(--accent); padding: 1rem 2rem; font-size: 1.1rem;">Explore Courses</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyEduConnect - Secure Learning</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('frontend_bp.home') }}" class="logo">MyEdu<span>Connect</span></a>
+        <div class="links">
+            <a href="{{ url_for('frontend_bp.search') }}">Courses</a>
+            {% if 'user_id' in session %}
+                <a href="{{ url_for('frontend_bp.dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('frontend_bp.logout') }}" class="btn">Logout</a>
+            {% else %}
+                <a href="{{ url_for('frontend_bp.login') }}" class="btn">Sign In</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
